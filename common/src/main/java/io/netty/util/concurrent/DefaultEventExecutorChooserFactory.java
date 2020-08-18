@@ -25,14 +25,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 @UnstableApi
 public final class DefaultEventExecutorChooserFactory implements EventExecutorChooserFactory {
 
+    // 单例模式
     public static final DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
-    private DefaultEventExecutorChooserFactory() { }
+    private DefaultEventExecutorChooserFactory() {
+    }
 
     @SuppressWarnings("unchecked")
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
+        // 根据execurots.length来决定使用哪种事件执行器选择器
+        // 两个选择器不同的地方在于，选择的时候，一个用的是&操作，一个用的是%操作
+        // 明显的是netty为了追求极致的性能，在针对2的幂次方的时候，新增了这么多代码来适配不同的选择器
         if (isPowerOfTwo(executors.length)) {
+            // 如果是2的幂次方，就用PowerOfTwoEventExecutorChooser
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {
             return new GenericEventExecutorChooser(executors);
