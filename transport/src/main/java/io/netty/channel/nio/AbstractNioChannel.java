@@ -76,12 +76,13 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     /**
      * Create a new instance
      *
-     * @param parent            the parent {@link Channel} by which this instance was created. May be {@code null}
-     * @param ch                the underlying {@link SelectableChannel} on which it operates
-     * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
+     * @param parent         the parent {@link Channel} by which this instance was created. May be {@code null}
+     * @param ch             the underlying {@link SelectableChannel} on which it operates
+     * @param readInterestOp the ops to set to receive data from the {@link SelectableChannel}
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         super(parent);
+        // 当使用的是NioServerSocketChannel注册的是ServerSocketChannel，如果使用的是NioSocketChannel，注册的是SocketChannel
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
@@ -381,8 +382,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     @Override
     protected void doRegister() throws Exception {
         boolean selected = false;
-        for (;;) {
+        for (; ; ) {
             try {
+                // 将channel注册到selector上
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
@@ -414,9 +416,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         }
 
         readPending = true;
-
+        // interestOps 获取selectionKey的兴趣集,前面doRegister()接口提到，selectionKey的兴趣集设置为0
         final int interestOps = selectionKey.interestOps();
+        // 这里的 readInterestOp 是前面讲NioSocketChannel创建时设置的值为 SelectionKey.OP_READ，也就是1
         if ((interestOps & readInterestOp) == 0) {
+            //这样，selectionKey最终设置的兴趣集为SelectionKey.OP_READ表示对读事件感兴趣
             selectionKey.interestOps(interestOps | readInterestOp);
         }
     }

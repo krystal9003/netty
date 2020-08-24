@@ -35,6 +35,13 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+/**
+ * 一般情况下就三个子类
+ * 1、HeaderContext
+ * 2、TailContext
+ * 3、DefaultChannelHandlerContext
+ * 通过pipeline添加的ChannelHandler默认都会使用DefaultChannelHandlerContext类来构建，来组成一个双向链表
+ */
 abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         implements ChannelHandlerContext, ResourceLeakHint {
 
@@ -387,6 +394,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     private void invokeChannelReadComplete() {
         if (invokeHandler()) {
             try {
+                // 抓到封装到context中的handler，执行channelReadComplete方法逻辑
                 ((ChannelInboundHandler) handler()).channelReadComplete(this);
             } catch (Throwable t) {
                 notifyHandlerException(t);
@@ -901,16 +909,26 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         return false;
     }
 
+    /**
+     * 找到下一个inbound handler
+     * @return
+     */
     private AbstractChannelHandlerContext findContextInbound() {
         AbstractChannelHandlerContext ctx = this;
+        // 查找下一个handler，如果前一个handler不是inbound，继续向前查找，直到找到第一个inbound handler
         do {
             ctx = ctx.next;
         } while (!ctx.inbound);
         return ctx;
     }
 
+    /**
+     * 找到前一个outbaund handler
+     * @return
+     */
     private AbstractChannelHandlerContext findContextOutbound() {
         AbstractChannelHandlerContext ctx = this;
+        // 查找前一个handler，如果前一个handler不是outbound，继续向前查找，直到找到第一个outbound handler
         do {
             ctx = ctx.prev;
         } while (!ctx.outbound);

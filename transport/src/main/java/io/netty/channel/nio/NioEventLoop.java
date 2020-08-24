@@ -668,8 +668,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
-                ch.unsafe().forceFlush();
+                unsafe.forceFlush();
             }
+
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
@@ -862,4 +863,6 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             logger.warn("Failed to update SelectionKeys.", t);
         }
     }
+
+
 }

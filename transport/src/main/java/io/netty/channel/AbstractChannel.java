@@ -506,6 +506,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
+                // AbstractNioChannel.doRegister，注册
                 doRegister();
                 neverRegistered = false;
                 registered = true;
@@ -518,8 +519,12 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 pipeline.fireChannelRegistered();
                 // Only fire a channelActive if the channel has never been registered. This prevents firing
                 // multiple channel actives if the channel is deregistered and re-registered.
+
+                // 服务端的NioServerSocketChannel已经与客户端的NioSocketChannel建立了连接
+                // 所以，NioSocketChannel是处于激活状态，isActive()返回ture
                 if (isActive()) {
                     if (firstRegistration) {
+                        // 传播ChannelActive事件
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
                         // This channel was registered before and autoRead() is set. This means we need to begin read
